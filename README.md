@@ -100,7 +100,7 @@ A Python-powered AR Heads-Up Display that transforms a live wireless video strea
 ### 1. Clone the repository
 
 ```bash
-[git clone https://github.com/hoanggxyuuki/Terminator-Vision-HUD](https://github.com/hoanggxyuuki/Terminator-Vision-HUD)
+git clone https://github.com/hoanggxyuuki/Terminator-Vision-HUD
 cd Terminator-Vision-HUD
 ```
 
