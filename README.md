@@ -13,9 +13,10 @@
 
 <br/>
 
-![Demo](esp_demo.gif)
+[![Demo](esp_demo.gif)](./esp_demo.gif)
 
-demo here, if you don't have it, it's because your network is laggy, please click on this file esp_demo.gif
+Demo here. If it does not load on GitHub due to network/cache, click this file: [esp_demo.gif](./esp_demo.gif)
+<br>
 *Walk around. Detect Wi-Fi signals. Lock on targets. Feel like a Terminator.*
 
 </div>
