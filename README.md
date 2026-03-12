@@ -1,169 +1,290 @@
+<div align="center">
 
-# Cyberpunk AR Target Lock HUD 🎯📡
+# CYBERPUNK AR TARGET LOCK HUD
 
-An Augmented Reality (AR) Heads-Up Display (HUD) written in Python and OpenCV. It transforms a live wireless video stream from an ESP32-CAM into a Terminator-style vision system, dynamically locking onto surrounding Wi-Fi signals (using an ESP32 DevKit for RSSI sensing) and visualizing them as floating, lock-on target boxes.
+### `>>> TERMINATOR VISION SYSTEM v1.0 <<<`
+
+**Real-time Augmented Reality Wi-Fi Radar powered by ESP32 & OpenCV**
+
+![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
+![ESP32](https://img.shields.io/badge/ESP32-CAM-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+<br/>
 
 ![Demo](esp_demo.gif)
 
-## 🛠 Hardware Requirements
-* **ESP32-CAM (with OV3660/OV2640):** Acts as the wireless "eye", streaming video over Wi-Fi.
-* **ESP32 DevKit V1 (Optional):** Acts as the Wi-Fi radar. Connected via USB to scan and output real-time RSSI data. *(Note: If unplugged, the system will automatically run in simulation mode).*
-* **Mac/PC:** To run the Python processing script.
+*Walk around. Detect Wi-Fi signals. Lock on targets. Feel like a Terminator.*
 
-## 📦 Dependencies
-You need to install the required Python modules. It is highly recommended to use a virtual environment (`venv`).
+</div>
+
+---
+
+## What is this?
+
+A Python-powered AR Heads-Up Display that transforms a live wireless video stream from an **ESP32-CAM** into a **Terminator-style vision system**. It dynamically detects surrounding Wi-Fi networks using an ESP32 DevKit's RSSI scanner and renders them as floating, animated lock-on target brackets right on the camera feed.
+
+**Think of it as**: Iron Man's HUD meets a Wi-Fi analyzer, running on $10 worth of hardware.
+
+---
+
+## Key Features
+
+| Feature | Description |
+|---|---|
+| **Live AR Overlay** | Real-time target brackets rendered on the ESP32-CAM video stream at 1280x720 |
+| **Wi-Fi RSSI Radar** | Scans nearby Wi-Fi networks and maps signal strength to visual target size |
+| **Dynamic Lock-On** | Targets grow, change color, and trigger a laser lock line when signal is strong (> -50 dBm) |
+| **Cyberpunk Aesthetic** | Green-tinted overlay, floating brackets, pulsating animations |
+| **Auto Simulation Mode** | No ESP32 DevKit? System auto-falls back to simulated Wi-Fi targets for demo |
+| **Graceful Reconnect** | Camera stream drops? Auto-reconnects without crashing |
+
+---
+
+## How It Works
+
+```
+                                    +-----------------+
+                                    |   ESP32-CAM     |
+                                    |  (Video Stream) |
+                                    +--------+--------+
+                                             |
+                                        Wi-Fi Stream
+                                        (MJPEG/HTTP)
+                                             |
+                                             v
++-----------------+              +-----------+-----------+
+|  ESP32 DevKit   |   Serial    |                       |
+|  (Wi-Fi Radar)  +------------>+   Python + OpenCV     |
+|  RSSI Scanner   |   USB       |   AR Processing       |
++-----------------+              |                       |
+                                 +-----------+-----------+
+                                             |
+                                       AR HUD Output
+                                             |
+                                             v
+                                    +-----------------+
+                                    |    Display      |
+                                    | Terminator HUD  |
+                                    +-----------------+
+```
+
+### Signal Strength → Visual Feedback
+
+| RSSI Range | Color | Bracket Size | Status |
+|---|---|---|---|
+| **> -50 dBm** (Strong) | Red | Large (up to 150px) | `LOCKED` + laser line |
+| **-70 to -50 dBm** (Medium) | Orange/Yellow | Medium | Tracking |
+| **< -70 dBm** (Weak) | Green | Small (down to 20px) | Scanning |
+
+---
+
+## Hardware Requirements
+
+| Component | Role | Required? |
+|---|---|---|
+| **ESP32-CAM** (OV3660/OV2640) | Wireless camera eye — streams live video over Wi-Fi | Yes |
+| **ESP32 DevKit V1** | Wi-Fi radar — scans nearby networks and outputs RSSI via serial | Optional* |
+| **USB Cable** | Connects ESP32 DevKit to your computer | Optional* |
+| **Mac / PC** | Runs the Python processing script | Yes |
+
+> *\*If the ESP32 DevKit is not connected, the system automatically enters **Simulation Mode** with 3 fake Wi-Fi targets (`Hidden_5G`, `Cyber_Router`, `Neighbor_Net`) for demo/testing purposes.*
+
+---
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/cyberpunk-ar-hud.git
+cd cyberpunk-ar-hud
+```
+
+### 2. Set up virtual environment (recommended)
+
+```bash
+python3 -m venv venv
+source venv/bin/activate        # macOS / Linux
+# venv\Scripts\activate         # Windows
+```
+
+### 3. Install dependencies
 
 ```bash
 pip install opencv-python numpy pyserial
-
 ```
 
-## ⚙️ Configuration & Setup
+### Dependencies breakdown
 
-1. **ESP32-CAM:** Flash the standard `CameraWebServer` sketch via Arduino IDE. Find the IP address from the Serial Monitor.
-2. **ESP32 DevKit:** Flash a Wi-Fi scanning sketch that prints data in the format `Muc tieu: <Name> | RSSI: <dBm>`.
-3. **Python Config:** Open `main.py` and modify the following configuration variables at the top of the file to match your hardware:
-* `cam_url`: Update with your ESP32-CAM's IP address (e.g., `"http://192.168.2.11:81/stream"`).
-* `esp_port`: Update with your ESP32 DevKit's serial port (e.g., `'/dev/cu.usbserial-0001'`).
+| Package | Version | Purpose |
+|---|---|---|
+| `opencv-python` | 4.x+ | Video capture, image processing, AR rendering |
+| `numpy` | 1.x+ | Signal interpolation and math operations |
+| `pyserial` | 3.x+ | Serial communication with ESP32 DevKit |
 
+---
 
+## Hardware Setup
 
-## 🚀 Usage
+### ESP32-CAM (Camera Module)
 
-Run the script from your terminal:
+1. Open **Arduino IDE**
+2. Flash the standard **`CameraWebServer`** example sketch
+3. Open **Serial Monitor** at `115200` baud
+4. Note the IP address printed (e.g., `192.168.2.11`)
+5. Verify the stream works by visiting: `http://<IP>:81/stream` in a browser
 
-```bash
-python3 main.py
+### ESP32 DevKit V1 (Wi-Fi Radar) — *Optional*
+
+1. Flash a Wi-Fi scanning sketch to the DevKit
+2. The sketch must output data in this exact format via Serial:
 
 ```
+Muc tieu: <Network_Name> | RSSI): <value>dBm
+```
 
-* Walk around with the ESP32-CAM.
-* As you approach a Wi-Fi source, the AR target will grow larger, turn red, and trigger a "LOCKED" laser line when the signal strength is > -50 dBm.
-* Press `q` to exit the HUD.
+**Example output:**
+```
+Muc tieu: MyHomeWiFi | RSSI): -45dBm
+Muc tieu: Neighbor_5G | RSSI): -72dBm
+Muc tieu: CoffeeShop | RSSI): -88dBm
+```
 
+3. Note the serial port (e.g., `/dev/cu.usbserial-0001` on macOS, `COM3` on Windows)
+
+---
+
+## Configuration
+
+Open `main.py` and update these two variables at the top:
+
+```python
+# Replace with your ESP32-CAM's stream URL
+cam_url = "http://192.168.2.11:81/stream"
+
+# Replace with your ESP32 DevKit's serial port
+esp_port = '/dev/cu.usbserial-0001'     # macOS
+# esp_port = 'COM3'                     # Windows
+# esp_port = '/dev/ttyUSB0'             # Linux
 ```
 
 ---
 
-### File `main.py` (Code nguyên bản, không comment)
+## Usage
 
-```python
-import cv2
-import serial
-import time
-import random
-import numpy as np
-import math
+```bash
+python3 main.py
+```
 
-cam_url = "http://192.168.2.11:81/stream" 
-esp_port = '/dev/cu.usbserial-0001' 
-baud_rate = 115200
+### What you'll see
 
-use_real_radar = False
-try:
-    ser = serial.Serial(esp_port, baud_rate, timeout=0.05)
-    use_real_radar = True
-except:
-    pass
+```
+>> [RADAR] Da ket noi DevKit V1!          # If ESP32 DevKit is connected
+>> [RADAR] Chay gia lap song!             # If running in simulation mode
+>> HE THONG TARGET LOCK DA KICH HOAT! Bam 'q' de tat.
+```
 
-cap = cv2.VideoCapture(cam_url)
-cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+### Controls
 
-ar_targets = {}
+| Key | Action |
+|---|---|
+| `q` | Quit the HUD and release all resources |
 
-def draw_lock_on_bracket(img, x, y, size, color, thickness=2):
-    L = int(size * 0.3)
-    cv2.line(img, (x - size, y - size), (x - size + L, y - size), color, thickness)
-    cv2.line(img, (x - size, y - size), (x - size, y - size + L), color, thickness)
-    cv2.line(img, (x + size, y - size), (x + size - L, y - size), color, thickness)
-    cv2.line(img, (x + size, y - size), (x + size, y - size + L), color, thickness)
-    cv2.line(img, (x - size, y + size), (x - size + L, y + size), color, thickness)
-    cv2.line(img, (x - size, y + size), (x - size, y + size - L), color, thickness)
-    cv2.line(img, (x + size, y + size), (x + size - L, y + size), color, thickness)
-    cv2.line(img, (x + size, y + size), (x + size, y + size - L), color, thickness)
+### Tips for best results
 
-time_step = 0
+- **Walk around** with the ESP32-CAM — the AR targets respond to real Wi-Fi signal changes
+- **Get closer** to a Wi-Fi router to see the target bracket grow and turn **red**
+- When RSSI exceeds **-50 dBm**, a **laser lock line** appears from the bottom center to the target
+- Targets automatically **expire after 5 seconds** if the signal is lost
+- The green tint overlay gives everything that **cyberpunk night-vision feel**
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        time.sleep(1)
-        cap = cv2.VideoCapture(cam_url)
-        continue
-        
-    frame = cv2.resize(frame, (1280, 720))
-    h, w = frame.shape[:2]
-    time_step += 1
-    current_time = time.time()
-    
-    if use_real_radar:
-        while ser.in_waiting > 0:
-            try:
-                line = ser.readline().decode('utf-8').strip()
-                if "Muc tieu" in line and "RSSI):" in line:
-                    parts = line.split("|")
-                    name = parts[0].replace("Muc tieu", "").strip()
-                    rssi = int(parts[1].split("RSSI):")[1].replace("dBm", "").strip())
-                    
-                    if name not in ar_targets:
-                        ar_targets[name] = [random.randint(200, w-200), random.randint(150, h-150), rssi, current_time]
-                    else:
-                        ar_targets[name][2] = rssi
-                        ar_targets[name][3] = current_time
-            except: pass
-    else:
-        if time_step % 10 == 0:
-            for n in ["Hidden_5G", "Cyber_Router", "Neighbor_Net"]:
-                rssi = random.randint(-90, -40)
-                if n not in ar_targets:
-                    ar_targets[n] = [random.randint(200, w-200), random.randint(150, h-150), rssi, current_time]
-                else:
-                    ar_targets[n][2] = rssi
-                    ar_targets[n][3] = current_time
+---
 
-    ar_targets = {k: v for k, v in ar_targets.items() if current_time - v[3] < 5.0}
+## Project Structure
 
-    overlay = frame.copy()
-    cv2.rectangle(overlay, (0, 0), (w, h), (15, 25, 10), -1)
-    frame = cv2.addWeighted(overlay, 0.2, frame, 0.8, 0)
+```
+cyberpunk-ar-hud/
+├── main.py          # Core application — AR processing, rendering, serial I/O
+├── esp_demo.gif     # Demo recording for README
+├── README.md        # You are here
+└── venv/            # Python virtual environment (not committed)
+```
 
-    center_x, center_y = w // 2, h
+---
 
-    for name, data in ar_targets.items():
-        tx, ty, rssi, _ = data
-        
-        tx += int(math.sin(time_step * 0.05 + ty) * 2)
-        ty += int(math.cos(time_step * 0.05 + tx) * 2)
-        tx = max(100, min(w - 100, tx))
-        ty = max(100, min(h - 100, ty))
-        
-        ar_targets[name][0], ar_targets[name][1] = tx, ty 
-        
-        size = int(np.interp(rssi, [-95, -30], [20, 150]))
-        
-        if rssi > -50:
-            color = (0, 0, 255)
-            thickness = 3
-            cv2.line(frame, (center_x, center_y), (tx, ty + size), (0, 0, 150), 2, cv2.LINE_AA)
-            cv2.putText(frame, "LOCKED", (tx - 40, ty + size + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-        elif rssi > -70:
-            color = (0, 200, 255)
-            thickness = 2
-        else:
-            color = (0, 255, 0)
-            thickness = 1
-            
-        draw_lock_on_bracket(frame, tx, ty, size, color, thickness)
-        
-        cv2.putText(frame, f"{name[:10]}", (tx - size, ty - size - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-        cv2.putText(frame, f"[{rssi} dBm]", (tx + 10, ty - size - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+## Technical Details
 
-    cv2.imshow("Terminator Vision HUD", frame)
+### AR Rendering Pipeline
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+1. **Frame Capture** — Grab MJPEG frame from ESP32-CAM HTTP stream
+2. **Resize** — Normalize to 1280x720 for consistent rendering
+3. **RSSI Ingest** — Read serial data from ESP32 DevKit (or generate simulated data)
+4. **Target Tracking** — Map each Wi-Fi network to a screen position with floating animation
+5. **Signal Interpolation** — `numpy.interp()` maps RSSI [-95, -30] dBm → bracket size [20, 150] px
+6. **Color Coding** — Red (locked) / Orange (tracking) / Green (scanning) based on signal strength
+7. **Overlay Compositing** — Green-tinted cyberpunk overlay blended at 20% opacity
+8. **Bracket Drawing** — Custom corner-bracket renderer for the lock-on effect
+9. **Display** — Final composited frame shown via OpenCV `imshow`
 
-cap.release()
-if use_real_radar: ser.close()
-cv2.destroyAllWindows()
+### Simulation Mode
+
+When no ESP32 DevKit is detected, the system generates 3 fake targets every 10 frames with random RSSI values between -90 and -40 dBm. This lets you develop and test the AR overlay without any hardware.
+
+### Target Lifecycle
+
+```
+Signal Detected → Target Created (random screen position)
+                → RSSI Updated (every scan cycle)
+                → Target Expires (if no update for 5 seconds)
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| **Black screen / no video** | Check ESP32-CAM IP address. Visit `http://<IP>:81/stream` in browser first |
+| **"Could not open video stream"** | Ensure ESP32-CAM and your computer are on the same Wi-Fi network |
+| **Serial port not found** | Check port name: `ls /dev/cu.*` (macOS) or Device Manager (Windows) |
+| **Laggy video feed** | Reduce resolution in ESP32-CAM web interface, or check Wi-Fi signal quality |
+| **Targets not appearing** | Verify ESP32 DevKit serial output format matches expected pattern |
+| **Script crashes on start** | Run `pip install opencv-python numpy pyserial` to ensure all deps are installed |
+
+---
+
+## Future Ideas
+
+- [ ] Add sound effects (lock-on beep, scanning hum)
+- [ ] Multi-camera support
+- [ ] Record AR session to video file
+- [ ] Web-based HUD via Flask/WebSocket
+- [ ] Bluetooth device scanning overlay
+- [ ] Distance estimation from RSSI using path-loss model
+- [ ] Customizable HUD themes (Terminator, Iron Man, Cyberpunk 2077)
+
+---
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.
+
+```bash
+# Fork → Clone → Branch → Code → PR
+git checkout -b feature/your-feature
+git commit -m "Add: your feature description"
+git push origin feature/your-feature
+```
+
+---
+
+<div align="center">
+
+**Built with caffeine and cyberpunk dreams**
+
+`[ SYSTEM ONLINE ] [ TARGETS ACQUIRED ] [ HUD ACTIVE ]`
+
+</div>
 
